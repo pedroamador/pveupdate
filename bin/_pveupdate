@@ -1,0 +1,11 @@
+#!/bin/bash
+for a in `vzlist -1`
+do
+	echo "==============================="
+	echo "Actualizando CTID......: $a"
+	echo "             Hostname..: $(vzctl exec $a 'hostname')"
+	echo "================================"
+	echo 
+        vzctl exec $a 'su - -c "apt-get update && aptitude full-upgrade -y"'
+done 
+					
