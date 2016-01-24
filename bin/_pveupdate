@@ -1,11 +1,37 @@
 #!/bin/bash
-for a in `vzlist -1`
-do
-	echo "==============================="
-	echo "Actualizando CTID......: $a"
-	echo "             Hostname..: $(vzctl exec $a 'hostname')"
-	echo "================================"
-	echo 
-        vzctl exec $a 'su - -c "apt-get update && aptitude full-upgrade -y"'
-done 
+
+# Determine openvz / lxc backend7
+BACKEND="none"
+which vzctl > /dev/null 2>&1 && BACKEND="openvz"
+which pct > /dev/null 2>&1 && BACKEND="lxc"
+
+
+if [ $BACKEND == "openvz" ]
+then
+	echo "OpenVZ detected... start update"
+	for a in `vzlist -1`
+	do
+		echo "==============================="
+		echo "Actualizando CTID......: $a"
+		echo "             Hostname..: $(vzctl exec $a 'hostname')"
+		echo "================================"
+		echo
+		vzctl exec $a 'su - -c "apt-get update && aptitude full-upgrade -y"'
+	done
+elif [ $BACKEND == "lxc" ]
+then
+	echo "LXC detected... start update"
+	for a in `pct list|grep running|cut -f 1 -d " "`
+	do
+		echo "==============================="
+		echo "Actualizando CTID......: $a"
+		echo "             Hostname..: $(pct exec $a -- hostname)"
+		echo "================================"
+		echo
+		pct  exec $a -- su -c "apt-get update; aptitude full-upgrade -y"
+	done
+else
+	echo "Unnown backend"
+	exit 1
+fi
 					
